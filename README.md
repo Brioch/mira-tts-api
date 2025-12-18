@@ -20,7 +20,7 @@ from mira.model import MiraTTS
 from IPython.display import Audio
 mira_tts = MiraTTS('YatharthS/MiraTTS') ## downloads model from huggingface
 
-file = "reference_file"
+file = "reference_file.wav" ## can be mp3/wav/ogg or anything that librosa supports
 text = "Alright, so have you ever heard of a little thing named text to speech? Well, it allows you to convert text into speech! I know, that's super cool, isn't it?"
 
 context_tokens = mira_tts.encode_audio(file)
@@ -31,7 +31,7 @@ Audio(audio, rate=48000)
 
 Running the model using batching: 
 ```python
-file = "reference_file"
+file = "reference_file.wav" ## can be mp3/wav/ogg or anything that librosa supports
 text = ["Hey, what's up! I am feeling SO happy!", "Honestly, this is really interesting, isn't it?"]
 
 context_tokens = [mira_tts.encode_audio(file)]
@@ -50,6 +50,7 @@ I recommend reading these 2 blogs to better easily understand LLM tts models and
 ## Next steps
 - [x] Release code and model
 - [ ] Support low latency streaming
+- [ ] Release native 48khz bicodec
 - [ ] Support multilingual models
       
 ## Final notes
