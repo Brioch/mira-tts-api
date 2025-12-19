@@ -1,6 +1,8 @@
-# MiraTTS
+# mira-tts-api
 [MiraTTS](https://huggingface.co/YatharthS/MiraTTS) is a finetune of the excellent [Spark-TTS](https://huggingface.co/SparkAudio/Spark-TTS-0.5B) model for enhanced realism and stability performing on par with closed source models. 
 This repository also heavily optimizes Mira with [Lmdeploy](https://github.com/InternLM/lmdeploy) and boosts quality by using [FlashSR](https://github.com/ysharma3501/FlashSR) to generate high quality audio at over **100x** realtime!
+
+This repository adds a simple API to generate audio from text using MiraTTS. It is compatible with the OpenAI API format and can be used with any OpenAI compatible client.
 
 ## Key benefits
 - Incredibly fast: Over 100x realtime by using Lmdeploy and batching.
@@ -8,54 +10,82 @@ This repository also heavily optimizes Mira with [Lmdeploy](https://github.com/I
 - Memory efficient: Works within 6gb vram.
 - Low latency: Latency can be low as 100ms.
 
+## Install
+
+### Using uv
+
+`uv` is supported as a faster alternative to conda and pip.
+
+```sh
+uv sync
+uv run server.py
+```
+
 ## Usage
-Simple 1 line installation:
-```
-uv pip install git+https://github.com/ysharma3501/MiraTTS.git
-```
 
-Running the model(bs=1):
-```python
-from mira.model import MiraTTS
-from IPython.display import Audio
-mira_tts = MiraTTS('YatharthS/MiraTTS') ## downloads model from huggingface
-
-file = "reference_file.wav" ## can be mp3/wav/ogg or anything that librosa supports
-text = "Alright, so have you ever heard of a little thing named text to speech? Well, it allows you to convert text into speech! I know, that's super cool, isn't it?"
-
-context_tokens = mira_tts.encode_audio(file)
-audio = mira_tts.generate(text, context_tokens)
-
-Audio(audio, rate=48000)
+```sh
+uv run server.py
 ```
 
-Running the model using batching: 
-```python
-file = "reference_file.wav" ## can be mp3/wav/ogg or anything that librosa supports
-text = ["Hey, what's up! I am feeling SO happy!", "Honestly, this is really interesting, isn't it?"]
+Server will run by default on http://127.0.0.1:5001/v1/audio/speech.
 
-context_tokens = [mira_tts.encode_audio(file)]
+Parameters are set with environment variables.
 
-audio = mira_tts.batch_generate(text, context_tokens)
+Copy `.env.dist` to `.env` and edit it to your needs.
 
-Audio(audio, rate=48000)
+```sh
+cp .env.dist .env
 ```
 
-Examples can be seen in the [huggingface model](https://huggingface.co/YatharthS/MiraTTS)
+Voice are expected to be wav audio files. For example, with a directory `/home/user/voices` containing `alloy.wav`, you would run the server with the following env vars:
 
-I recommend reading these 2 blogs to better easily understand LLM tts models and how I optimize them
-- How they work: https://huggingface.co/blog/YatharthS/llm-tts-models
-- How to optimize them: https://huggingface.co/blog/YatharthS/making-neutts-200x-realtime
+- `SUPPORTED_VOICES=alloy`
+- `VOICES_DIR=/home/user/voices`
 
-## Next steps
-- [x] Release code and model
-- [ ] Support low latency streaming
-- [ ] Release native 48khz bicodec
-- [ ] Support multilingual models
-      
-## Final notes
-Thanks very much to the authors of Spark-TTS. Thanks for checking out this repository as well.
+### Environment Variables
 
-Stars would be well appreciated, thank you.
+```
+API_HOST              Host to run the server on. Default: 0.0.0.0
+API_PORT              Port to run the server on. Default: 5001
+VOICES_DIR            Path to the audio prompt files dir. Default: ./voices
+SUPPORTED_VOICES      Comma-separated list of supported voices. Example: 'alloy,ash'. Default is empty so all voices in the voices dir are loaded.
+CORS_ALLOW_ORIGIN     CORS allowed origin. Default: *
+SEED                  Seed for reproducibility. Default: 0 (random)
+WEB_PORT              Port to run the web UI on when using the Dockerfile. Default: 8080
+```
 
-Email: yatharthsharma3501@gmail.com
+### Using the API
+
+## /v1/audio/speech
+
+See [OpenAI Compatible API Speech endpoint](https://platform.openai.com/docs/api-reference/audio/createSpeech). This API takes a json containing an input text and a voice and replies with the TTS audio data. 
+
+Example API call with `curl`:
+
+```sh
+curl -X POST http://localhost:5001/v1/audio/speech -H "Content-Type: application/json" -d '{"input": "Hello, this is a test.", "voice": "alloy"}' --output speech.wav
+```
+
+## /tts
+
+This API is similar to the OpenAI API but it allows for more parameters.
+
+Parameters are text, predefined_voice_id, model, speed_factor, cfg_weight, temperature, exaggeration, output_format, seed, language_id.
+
+```sh
+curl -X POST http://localhost:5001/tts -H "Content-Type: application/json" -d '{"text": "Hello, this is a test.", "predefined_voice_id": "alloy"}' --output speech.wav
+```
+
+### Using the web UI
+
+First, run the API server. Then start the web UI server:
+
+```sh
+python -m http.server 8080 -d public -b 127.0.0.1
+```
+
+Then open `http://localhost:8080` in your browser. You can set the API URL, enter text and select a voice to generate speech.
+
+### Usage in SillyTavern
+
+You can use the "Chatterbox" or "OpenAI compatible" TTS options in SillyTavern to use this API.

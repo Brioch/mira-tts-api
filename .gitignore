@@ -1,0 +1,10 @@
+.DS_Store
+.venv
+venv
+/.env
+FastNeuTTS.egg-info
+/output
+/voices
+__pycache__
+.ruff_cache
+compose.override.yaml
