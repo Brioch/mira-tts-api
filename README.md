@@ -18,13 +18,13 @@ This repository adds a simple API to generate audio from text using MiraTTS. It 
 
 ```sh
 uv sync
-uv run server.py
+uv run main.py
 ```
 
 ## Usage
 
 ```sh
-uv run server.py
+uv run main.py
 ```
 
 Server will run by default on http://127.0.0.1:5001/v1/audio/speech.
